@@ -29,14 +29,37 @@ jobs:
 
       - name: Unzip EcoChoice project
         run: |
+          rm -rf extracted
           unzip -q ecochoice_android_project_v2.zip -d extracted
           PROJECT_DIR=$(find extracted -maxdepth 3 -name settings.gradle.kts -exec dirname {} \; | head -n 1)
-          echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
+          echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
           echo "Project directory: $PROJECT_DIR"
+
+      - name: Patch Android resources before build
+        run: |
+          cd "$PROJECT_DIR"
+          python3 - <<'PY'
+          from pathlib import Path
+
+          manifest = Path("app/src/main/AndroidManifest.xml")
+          text = manifest.read_text()
+          text = text.replace('        android:roundIcon="@drawable/ic_leaf_round"\n', '')
+          manifest.write_text(text)
+
+          themes = Path("app/src/main/res/values/themes.xml")
+          themes.write_text("""<?xml version="1.0" encoding="utf-8"?>
+          <resources>
+              <style name="Theme.EcoChoice" parent="@android:style/Theme.Material.Light.NoActionBar">
+                  <item name="android:windowActionBar">false</item>
+                  <item name="android:windowNoTitle">true</item>
+              </style>
+          </resources>
+          """)
+          PY
 
       - name: Build debug APK
         working-directory: ${{ env.PROJECT_DIR }}
-        run: gradle assembleDebug --no-daemon
+        run: gradle assembleDebug --no-daemon --stacktrace
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
