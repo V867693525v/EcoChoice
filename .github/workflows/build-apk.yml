@@ -30,7 +30,7 @@ jobs:
       - name: Unzip EcoChoice project
         run: |
           rm -rf extracted
-          unzip -q ecochoice_android_project_v14.zip -d extracted
+          unzip -q ecochoice_android_project_v15.zip -d extracted
           PROJECT_DIR=$(find extracted -maxdepth 3 -name settings.gradle.kts -exec dirname {} \; | head -n 1)
           echo "PROJECT_DIR=$PROJECT_DIR" >> "$GITHUB_ENV"
           echo "Project directory: $PROJECT_DIR"
